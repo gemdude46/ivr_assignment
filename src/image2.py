@@ -24,9 +24,9 @@ class image_converter:
 		self.image_sub2 = rospy.Subscriber("/camera2/robot/image_raw",Image,self.callback2)
 
 		# publishers for joint positions
-		self.joint_2_pub = rospy.Publisher('/robot/joint2_position_controller/command', Float64)
-		self.joint_3_pub = rospy.Publisher('/robot/joint3_position_controller/command', Float64)
-		self.joint_4_pub = rospy.Publisher('/robot/joint4_position_controller/command', Float64)
+		self.joint_2_pub = rospy.Publisher('/robot/joint2_position_controller/command', Float64, queue_size=10)
+		self.joint_3_pub = rospy.Publisher('/robot/joint3_position_controller/command', Float64, queue_size=10)
+		self.joint_4_pub = rospy.Publisher('/robot/joint4_position_controller/command', Float64, queue_size=10)
 
 		# initialize the bridge between openCV and ROS
 		self.bridge = CvBridge()
@@ -41,8 +41,8 @@ class image_converter:
 			print(e)
 		# Uncomment if you want to save the image
 		#cv2.imwrite('image_copy.png', cv_image)
-		im2=cv2.imshow('window2', self.cv_image2)
-		cv2.waitKey(1)
+		#im2=cv2.imshow('window2', self.cv_image2)
+		#cv2.waitKey(1)
 
 		#move joints
 		t = rospy.get_time()
