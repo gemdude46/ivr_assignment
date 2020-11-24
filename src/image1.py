@@ -11,10 +11,10 @@ from std_msgs.msg import Float64MultiArray, Float64
 from cv_bridge import CvBridge, CvBridgeError
 
 class Line:
-	def __init__(self, p1, p2):
+	def __init__(self, p0, p1):
 		self.s = p0
 		self.d = p1 - p0
-		self.d /= np.linalg.norm(self.d)
+		self.d = self.d / np.linalg.norm(self.d)
 	
 	def closest_points(self, other):
 		w = self.s - other.s
@@ -84,7 +84,7 @@ class ViewData:
 		self.detected_objects[target.name] = detected_object
 	
 	def all_lines(self):
-		return obj.line for obj in self.detected_objects.values() if obj
+		return (obj.line for obj in self.detected_objects.values() if obj)
 
 class SceneData:
 	def __init__(self, x_view, y_view):
