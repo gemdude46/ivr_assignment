@@ -159,9 +159,10 @@ class ImageConverter:
 		self.image_pub1 = rospy.Publisher("image_topic1",Image, queue_size = 1)
 		# initialize a subscriber to recieve messages rom a topic named /robot/camera1/image_raw and use callback function to recieve data
 		self.image_sub1 = rospy.Subscriber("/camera1/robot/image_raw",Image,self.callback1)
+		self.image_sub2 = rospy.Subscriber("/camera2/robot/image_raw",Image,self.callback2)
 		# initialize the bridge between openCV and ROS
 		self.bridge = CvBridge()
-		
+		self.cv_image1 = self.cv_image2 = None
 
 
 
@@ -184,11 +185,19 @@ class ImageConverter:
 		except CvBridgeError as e:
 			print(e)
 
-		view1 = ViewData(im1, camera1)
-		view2 = ViewData(im2, camera2)
-		scene = SceneData(view1, view2)
+		if self.cv_image1 and self.cv_image2:
+			view1 = ViewData(self.cv_image1, camera1)
+			view2 = ViewData(self.cv_image2, camera2)
+			scene = SceneData(view1, view2)
 
-		print(scene)
+			print(scene)
+	
+	def callback2(self, data):
+		try:
+			self.cv_image2 = self.bridge.imgmsg_to_cv2(data, "bgr8")
+		except CvBridgeError as e:
+			print(e)
+		
 
 # call the class
 def main(args):
