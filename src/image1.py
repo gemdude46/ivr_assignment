@@ -47,7 +47,10 @@ class DetectionTarget:
 		self.range = color_range
 
 detection_targets = (
-	DetectionTarget('yellow', ColorRange((), ()))
+	DetectionTarget('yellow', ColorRange((0,100,100), (10,150,150))),
+	DetectionTarget('blue', ColorRange((100,0,0), (150,10,10))),
+	DetectionTarget('green', ColorRange((0,100,0), (10,150,10))),
+	DetectionTarget('red', ColorRange((0,0,100), (10,10,150))),
 )
 
 class CameraData:
@@ -69,11 +72,12 @@ class CameraData:
 		return Line(self.pos, self.project_center + right * scaled[0] + up * scaled[1])
 
 
-camera1 = CameraData(np.array((18,0,0)), np.array((-1,0,0)), np.array((1,1)))
-camera2 = CameraData(np.array((0,-18,0)), np.array((0,1,0)), np.array((1,1)))
+camera1 = CameraData(np.array((18,0,0)), np.array((-1,0,0)), np.array((5/3, 5/3)))
+camera2 = CameraData(np.array((0,-18,0)), np.array((0,1,0)), np.array((5/3, 5/3)))
 
 class ObjectData2D:
-	def __init__(self, view_data, img_pos):
+	def __init__(self, name, view_data, img_pos):
+		self.name = name
 		self.view_data = view_data
 		self.img_pos = img_pos
 
@@ -85,6 +89,9 @@ class ObjectData2D:
 	
 	def __bool__(self):
 		return self.line is not None
+
+	def __str__(self):
+		return '{}: {}'.format(self.name, self.img_pos)
 
 class ObjectData3D:
 	def __init__(self, name, position):
@@ -106,11 +113,17 @@ class ViewData:
 	
 	def detect(self, target):
 		target_moments = cv2.moments(cv2.inRange(self.image, target.range.min, target.range.max))
-		detected_object = ObjectData2D(self, np.array((target_moments['m01'] / target_moments['m00'], target_moments['m10'] / target_moments['m00'])) / self.image.shape[:2])
+		if target_moments['m00'] < 1000:
+			detected_object = ObjectData2D(target.name, self, None)
+		else:
+			detected_object = ObjectData2D(target.name, self, np.array((target_moments['m10'] / target_moments['m00'], target_moments['m01'] / target_moments['m00'])) / self.image.shape[:2] - np.array((0.5, 0.5)))
 		self.detected_objects[target.name] = detected_object
 	
 	def all_lines(self):
 		return (obj.line for obj in self.detected_objects.values() if obj)
+
+	def __str__(self):
+		return '\n'.join([str(o) for o in self.detected_objects.values()])
 
 class SceneData:
 	def __init__(self, x_view, y_view):
@@ -124,7 +137,7 @@ class SceneData:
 	
 	def detect(self, target):
 		x_data = self.x_view.detected_objects[target.name]
-		y_data = self.x_view.detected_objects[target.name]
+		y_data = self.y_view.detected_objects[target.name]
 
 		if not x_data and not y_data:
 			detected_object = ObjectData3D(target.name, None)
@@ -144,10 +157,10 @@ class SceneData:
 
 			detected_object = ObjectData3D(target.name, known_line.get_average_closest_point(closest_line))
 
-		return detected_object
+		self.detected_objects[target.name] = detected_object
 	
 	def __str__(self):
-		return '\n'.join([str(o) for o in self.detected_objects.values()])
+		return '\n'.join([str(self.x_view), str(self.y_view), *(str(o) for o in self.detected_objects.values())])
 
 class ImageConverter:
 
@@ -185,7 +198,7 @@ class ImageConverter:
 		except CvBridgeError as e:
 			print(e)
 
-		if self.cv_image1 and self.cv_image2:
+		if self.cv_image1 is not None and self.cv_image2 is not None:
 			view1 = ViewData(self.cv_image1, camera1)
 			view2 = ViewData(self.cv_image2, camera2)
 			scene = SceneData(view1, view2)
