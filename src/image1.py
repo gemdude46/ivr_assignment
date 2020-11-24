@@ -10,6 +10,32 @@ from sensor_msgs.msg import Image
 from std_msgs.msg import Float64MultiArray, Float64
 from cv_bridge import CvBridge, CvBridgeError
 
+class Line:
+	def __init__(self, p1, p2):
+		self.s = p0
+		self.d = p1 - p0
+		self.d /= np.linalg.norm(self.d)
+	
+	def closest_points(self, other):
+		w = self.s - other.s
+		a = self.d @ self.d
+		b = self.d @ other.d
+		c = other.d @ other.d
+		d = self.d @ w
+		e = other.d @ w
+		denom = a*c - b*b
+		selflen = (b*e - c*d) / denom
+		otherlen = (a*e - b*d) / denom
+		return (self.s + self.d * selflen, other.s + other.d * otherlen)
+
+	def distance_to(self, other):
+		a, b = self.closest_points(other)
+		return np.linalg.norm(a - b)
+	
+	def get_average_closest_point(self, other):
+		a, b = self.closest_points(other)
+		return (a + b) / 2
+
 class ColorRange:
 	def __init__(self, a, b):
 		self.min = a
@@ -43,8 +69,9 @@ class ObjectData3D:
 		self.position = position
 
 class ViewData:
-	def __init__(self, image):
+	def __init__(self, image, camera_data):
 		self.image = image
+		self.camera_data = camera_data
 
 		self.detected_objects = dict()
 
