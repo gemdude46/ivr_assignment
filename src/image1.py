@@ -4,11 +4,15 @@ import roslib
 import sys
 import rospy
 import cv2
+import math
 import numpy as np
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float64MultiArray, Float64
 from cv_bridge import CvBridge, CvBridgeError
+
+def angle_between(u, v):
+	return np.arccos(np.clip((u / np.linalg.norm(u)) @ (v / np.linalg.norm(v)), -1, 1))
 
 class Line:
 	def __init__(self, p0, p1):
@@ -203,7 +207,17 @@ class ImageConverter:
 			view2 = ViewData(self.cv_image2, camera2)
 			scene = SceneData(view1, view2)
 
-			print(scene)
+			yellow = scene.discovered_objects['yellow'].position
+			blue = scene.discovered_objects['blue'].position
+			green = scene.discovered_objects['green'].position
+			red = scene.discovered_objects['red'].position
+
+			est_joint_2 = math.atan2(*(green - blue)[1:])
+			est_joint_3 = math.atan2(*(green - blue)[::2])
+			est_joint_4 = angle_between(green - blue, red - green)
+
+			print(est_joint_2, est_joint_3, est_joint_4)
+
 	
 	def callback2(self, data):
 		try:
