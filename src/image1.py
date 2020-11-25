@@ -176,9 +176,15 @@ class ImageConverter:
 		self.image_pub1 = rospy.Publisher("image_topic1",Image, queue_size = 1)
 		# initialize a subscriber to recieve messages rom a topic named /robot/camera1/image_raw and use callback function to recieve data
 		self.image_sub1 = rospy.Subscriber("/camera1/robot/image_raw",Image,self.callback1)
+		# and the other camera
 		self.image_sub2 = rospy.Subscriber("/camera2/robot/image_raw",Image,self.callback2)
 		# initialize the bridge between openCV and ROS
 		self.bridge = CvBridge()
+		# output for joint estimates
+		self.est_2_pub = rospy.Publisher('/vision_estimates/joint2', Float64, queue_size=10)
+		self.est_3_pub = rospy.Publisher('/vision_estimates/joint3', Float64, queue_size=10)
+		self.est_4_pub = rospy.Publisher('/vision_estimates/joint4', Float64, queue_size=10)
+
 		self.cv_image1 = self.cv_image2 = None
 
 
@@ -207,16 +213,21 @@ class ImageConverter:
 			view2 = ViewData(self.cv_image2, camera2)
 			scene = SceneData(view1, view2)
 
-			yellow = scene.discovered_objects['yellow'].position
-			blue = scene.discovered_objects['blue'].position
-			green = scene.discovered_objects['green'].position
-			red = scene.discovered_objects['red'].position
+			yellow = scene.detected_objects['yellow'].position
+			blue = scene.detected_objects['blue'].position
+			green = scene.detected_objects['green'].position
+			red = scene.detected_objects['red'].position
 
-			est_joint_2 = math.atan2(*(green - blue)[1:])
-			est_joint_3 = math.atan2(*(green - blue)[::2])
+			est_joint_2 = math.pi + math.atan2(*(green - blue)[1:])
+			est_joint_3 = math.pi - math.atan2(*(green - blue)[::2])
 			est_joint_4 = angle_between(green - blue, red - green)
 
-			print(est_joint_2, est_joint_3, est_joint_4)
+			if est_joint_2 > math.pi: est_joint_2 -= 2 * math.pi
+			if est_joint_3 > math.pi: est_joint_3 -= 2 * math.pi
+
+			self.est_2_pub.publish(est_joint_2)
+			self.est_3_pub.publish(est_joint_3)
+			self.est_4_pub.publish(est_joint_4)
 
 	
 	def callback2(self, data):
