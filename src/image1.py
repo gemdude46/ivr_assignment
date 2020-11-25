@@ -140,7 +140,7 @@ class ViewData:
 		masked = cv2.inRange(self.image, target.range.min, target.range.max)
 
 		if target.use_shape:
-			_, contours, _ = cv2.findContours(masked, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+			contours, _ = cv2.findContours(masked, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 			if contours:
 				best_contour = None
 				for contour in contours:
