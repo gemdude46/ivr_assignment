@@ -141,7 +141,7 @@ class ViewData:
 
 		if target.use_shape:
 			detected_object = ObjectData2D(target.name, self, None)
-			cv2.imshow(masked)
+			cv2.imshow('window1', masked)
 
 		else:
 			target_moments = cv2.moments(masked)
@@ -231,7 +231,7 @@ class ImageConverter:
 		# Uncomment if you want to save the image
 		#cv2.imwrite('image_copy.png', cv_image)
 
-		im1=cv2.imshow('window1', self.cv_image1)
+		#im1=cv2.imshow('window1', self.cv_image1)
 		cv2.waitKey(1)
 		# Publish the results
 		try: 
