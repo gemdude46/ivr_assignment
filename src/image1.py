@@ -67,7 +67,7 @@ detection_targets = (
 	DetectionTarget('blue', ColorRange((100,0,0), (150,10,10))),
 	DetectionTarget('green', ColorRange((0,100,0), (10,150,10))),
 	DetectionTarget('red', ColorRange((0,0,100), (10,10,150))),
-	DetectionTarget('target', ColorRange((0,100,100), (10,150,150)), True)
+	DetectionTarget('target', ColorRange((0,50,100), (10,100,200)), True)
 )
 
 class CameraData:
