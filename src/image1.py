@@ -57,15 +57,17 @@ class ColorRange:
 class DetectionTarget:
 	''' Represents a colored target to detect. '''
 
-	def __init__(self, name, color_range):
+	def __init__(self, name, color_range, use_shape=False):
 		self.name = name
 		self.range = color_range
+		self.use_shape = use_shape
 
 detection_targets = (
 	DetectionTarget('yellow', ColorRange((0,100,100), (10,150,150))),
 	DetectionTarget('blue', ColorRange((100,0,0), (150,10,10))),
 	DetectionTarget('green', ColorRange((0,100,0), (10,150,10))),
 	DetectionTarget('red', ColorRange((0,0,100), (10,10,150))),
+	DetectionTarget('target', ColorRange((0,100,100), (10,150,150)), True)
 )
 
 class CameraData:
@@ -103,7 +105,6 @@ class ObjectData2D:
 
 		if img_pos is None:
 			self.line = None
-
 		else:
 			self.line = view_data.camera_data.line(img_pos)
 	
@@ -136,11 +137,19 @@ class ViewData:
 			self.detect(detection_target)
 	
 	def detect(self, target):
-		target_moments = cv2.moments(cv2.inRange(self.image, target.range.min, target.range.max))
-		if target_moments['m00'] < 1000:
+		masked = cv2.inRange(self.image, target.range.min, target.range.max)
+
+		if target.use_shape:
 			detected_object = ObjectData2D(target.name, self, None)
+			cv2.imshow(masked)
+
 		else:
-			detected_object = ObjectData2D(target.name, self, np.array((target_moments['m10'] / target_moments['m00'], target_moments['m01'] / target_moments['m00'])) / self.image.shape[:2] - np.array((0.5, 0.5)))
+			target_moments = cv2.moments(masked)
+			if target_moments['m00'] < 1000:
+				detected_object = ObjectData2D(target.name, self, None)
+			else:
+				detected_object = ObjectData2D(target.name, self, np.array((target_moments['m10'] / target_moments['m00'], target_moments['m01'] / target_moments['m00'])) / self.image.shape[:2] - np.array((0.5, 0.5)))
+		
 		self.detected_objects[target.name] = detected_object
 	
 	def all_lines(self):
