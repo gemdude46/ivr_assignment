@@ -145,10 +145,8 @@ class ViewData:
 				best_contour = None
 				best_shape = 9999
 				for contour in contours:
-					minx = min(p[0] for p in contour)
-					maxx = max(p[0] for p in contour)
-					miny = min(p[1] for p in contour)
-					maxy = max(p[1] for p in contour)
+					minx, miny = np.amin(contour, axis=0)[0]
+					maxx, maxy = np.amax(contour, axis=0)[0]
 
 					width = maxx - minx
 					height = maxy - miny
@@ -162,7 +160,7 @@ class ViewData:
 						best_contour = contour
 						best_shape = shape
 
-				center = np.mean(best_contour, axis=0)
+				center = np.mean(best_contour, axis=0)[0]
 				detected_object = ObjectData2D(target.name, self, center / masked.shape - np.array((0.5, 0.5)))
 			
 			else:
