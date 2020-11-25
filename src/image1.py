@@ -238,6 +238,10 @@ class ImageConverter:
 		self.est_2_pub = rospy.Publisher('/vision_estimates/joint2', Float64, queue_size=10)
 		self.est_3_pub = rospy.Publisher('/vision_estimates/joint3', Float64, queue_size=10)
 		self.est_4_pub = rospy.Publisher('/vision_estimates/joint4', Float64, queue_size=10)
+		# output for target estimates
+		self.target_pub_x = rospy.Publisher('/vision_estimates/target/x', Float64, queue_size=10)
+		self.target_pub_y = rospy.Publisher('/vision_estimates/target/y', Float64, queue_size=10)
+		self.target_pub_z = rospy.Publisher('/vision_estimates/target/z', Float64, queue_size=10)
 
 		self.cv_image1 = self.cv_image2 = None
 
@@ -271,6 +275,7 @@ class ImageConverter:
 			blue = scene.detected_objects['blue'].position
 			green = scene.detected_objects['green'].position
 			red = scene.detected_objects['red'].position
+			target = scene.detected_objects['target'].position
 
 			est_joint_2 = math.pi + math.atan2(*(green - blue)[1:])
 			est_joint_3 = math.pi - math.atan2(*(green - blue)[::2])
@@ -282,6 +287,12 @@ class ImageConverter:
 			self.est_2_pub.publish(est_joint_2)
 			self.est_3_pub.publish(est_joint_3)
 			self.est_4_pub.publish(est_joint_4)
+
+			target_offset = target - yellow
+
+			self.target_pub_x.publish(target_offset[0])
+			self.target_pub_y.publish(target_offset[1])
+			self.target_pub_z.publish(target_offset[2])
 
 	
 	def callback2(self, data):
