@@ -292,7 +292,7 @@ class ImageConverter:
 
 			self.target_pub_x.publish(target_offset[0])
 			self.target_pub_y.publish(target_offset[1])
-			self.target_pub_z.publish(target_offset[2])
+			self.target_pub_z.publish(0.6 - target_offset[2])
 
 	
 	def callback2(self, data):
