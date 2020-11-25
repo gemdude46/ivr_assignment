@@ -143,10 +143,30 @@ class ViewData:
 			contours, _ = cv2.findContours(masked, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 			if contours:
 				best_contour = None
+				best_shape = 9999
 				for contour in contours:
-					print(contour)
-			#else:
-			detected_object = ObjectData2D(target.name, self, None)
+					minx = min(p[0] for p in contour)
+					maxx = max(p[0] for p in contour)
+					miny = min(p[1] for p in contour)
+					maxy = max(p[1] for p in contour)
+
+					width = maxx - minx
+					height = maxy - miny
+
+					if width == 0 or height == 0:
+						shape = 9999
+					else:
+						shape = abs(math.log(width / height))
+
+					if best_contour is None or shape < best_shape:
+						best_contour = contour
+						best_shape = shape
+
+				center = np.mean(best_contour, axis=0)
+				detected_object = ObjectData2D(target.name, self, center / masked.shape - np.array((0.5, 0.5)))
+			
+			else:
+				detected_object = ObjectData2D(target.name, self, None)
 
 		else:
 			target_moments = cv2.moments(masked)
