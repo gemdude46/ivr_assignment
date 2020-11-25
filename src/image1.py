@@ -242,6 +242,10 @@ class ImageConverter:
 		self.target_pub_x = rospy.Publisher('/vision_estimates/target/x', Float64, queue_size=10)
 		self.target_pub_y = rospy.Publisher('/vision_estimates/target/y', Float64, queue_size=10)
 		self.target_pub_z = rospy.Publisher('/vision_estimates/target/z', Float64, queue_size=10)
+		# output for end effector estimates
+		self.end_pub_x = rospy.Publisher('/vision_estimates/end/x', Float64, queue_size=10)
+		self.end_pub_y = rospy.Publisher('/vision_estimates/end/y', Float64, queue_size=10)
+		self.end_pub_z = rospy.Publisher('/vision_estimates/end/z', Float64, queue_size=10)
 
 		self.cv_image1 = self.cv_image2 = None
 
@@ -287,6 +291,12 @@ class ImageConverter:
 			self.est_2_pub.publish(est_joint_2)
 			self.est_3_pub.publish(est_joint_3)
 			self.est_4_pub.publish(est_joint_4)
+
+			end_offset = red - yellow
+
+			self.end_pub_x.publish(end_offset[0])
+			self.end_pub_y.publish(end_offset[1])
+			self.end_pub_z.publish(0.6 - end_offset[2])
 
 			target_offset = target - yellow
 
