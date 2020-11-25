@@ -12,15 +12,20 @@ from std_msgs.msg import Float64MultiArray, Float64
 from cv_bridge import CvBridge, CvBridgeError
 
 def angle_between(u, v):
+	''' Calculates the angle between two vectors in radians. '''
 	return np.arccos(np.clip((u / np.linalg.norm(u)) @ (v / np.linalg.norm(v)), -1, 1))
 
 class Line:
+	''' Represents a line in 3D space. '''
+
 	def __init__(self, p0, p1):
+		''' Construct from two points. '''
 		self.s = p0
 		self.d = p1 - p0
 		self.d = self.d / np.linalg.norm(self.d)
 	
 	def closest_points(self, other):
+		'''Returns the closest point on this line to another, and the closest point on the other line to this one. '''
 		w = self.s - other.s
 		a = self.d @ self.d
 		b = self.d @ other.d
@@ -33,19 +38,25 @@ class Line:
 		return (self.s + self.d * selflen, other.s + other.d * otherlen)
 
 	def distance_to(self, other):
+		''' Returns the minimum distance to another line. '''
 		a, b = self.closest_points(other)
 		return np.linalg.norm(a - b)
 	
 	def get_average_closest_point(self, other):
+		''' Returns the halfway point on the line segment that connects two lines at their closest aproach. '''
 		a, b = self.closest_points(other)
 		return (a + b) / 2
 
 class ColorRange:
+	''' Represents a range of colors used in target detection. '''
+
 	def __init__(self, a, b):
 		self.min = a
 		self.max = b
 
 class DetectionTarget:
+	''' Represents a colored target to detect. '''
+
 	def __init__(self, name, color_range):
 		self.name = name
 		self.range = color_range
@@ -58,6 +69,8 @@ detection_targets = (
 )
 
 class CameraData:
+	''' Stores data about a camera. '''
+
 	def __init__(self, pos, facing, size):
 		self.pos = pos
 		self.facing = facing
@@ -65,6 +78,7 @@ class CameraData:
 		self.size = size
 	
 	def line(self, img_pos):
+		''' Casts a line from a point on the camera's image. '''
 		right = np.cross(self.facing, np.array((0,0,1)))
 		up = np.cross(right, self.facing)
 
@@ -80,6 +94,8 @@ camera1 = CameraData(np.array((18,0,0)), np.array((-1,0,0)), np.array((5/3, 5/3)
 camera2 = CameraData(np.array((0,-18,0)), np.array((0,1,0)), np.array((5/3, 5/3)))
 
 class ObjectData2D:
+	''' Data about an object in a single 2D view. '''
+
 	def __init__(self, name, view_data, img_pos):
 		self.name = name
 		self.view_data = view_data
@@ -98,6 +114,8 @@ class ObjectData2D:
 		return '{}: {}'.format(self.name, self.img_pos)
 
 class ObjectData3D:
+	''' Data about an object in 3D space, calculated from multiple views. '''
+
 	def __init__(self, name, position):
 		self.name = name
 		self.position = position
@@ -106,6 +124,8 @@ class ObjectData3D:
 		return '{}: {}'.format(self.name, self.position)
 
 class ViewData:
+	''' Data from a single 2D viewpoint. '''
+
 	def __init__(self, image, camera_data):
 		self.image = image
 		self.camera_data = camera_data
@@ -130,6 +150,8 @@ class ViewData:
 		return '\n'.join([str(o) for o in self.detected_objects.values()])
 
 class SceneData:
+	''' 3D data from multiple viewpoints. '''
+
 	def __init__(self, x_view, y_view):
 		self.x_view = x_view
 		self.y_view = y_view
