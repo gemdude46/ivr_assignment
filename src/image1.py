@@ -140,15 +140,20 @@ class ViewData:
 		masked = cv2.inRange(self.image, target.range.min, target.range.max)
 
 		if target.use_shape:
+			_, contours, _ = cv2.findContours(masked, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+			if contours:
+				best_contour = None
+				for contour in contours:
+					print(contour)
+			#else:
 			detected_object = ObjectData2D(target.name, self, None)
-			cv2.imshow('window1', masked)
 
 		else:
 			target_moments = cv2.moments(masked)
 			if target_moments['m00'] < 1000:
 				detected_object = ObjectData2D(target.name, self, None)
 			else:
-				detected_object = ObjectData2D(target.name, self, np.array((target_moments['m10'] / target_moments['m00'], target_moments['m01'] / target_moments['m00'])) / self.image.shape[:2] - np.array((0.5, 0.5)))
+				detected_object = ObjectData2D(target.name, self, np.array((target_moments['m10'] / target_moments['m00'], target_moments['m01'] / target_moments['m00'])) / masked.shape - np.array((0.5, 0.5)))
 		
 		self.detected_objects[target.name] = detected_object
 	
