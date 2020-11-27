@@ -43,7 +43,47 @@ there are occations, such as when the target is occluded by a link such that it 
 
 \section{Robot Control}
 
-Joseph: fill out this section.
+\subsection{Forward Kinematics}
+
+For the Forward Kinematics of the robot, we see that there are 3 translations along the z-axis, and 4 different rotations (2 about $x$, 1 about $y$ and 1 about $z$), which goes from the base of the robot to the end effector. All these homogeneous transformations matrices  are computed in order give us the final FK matrix, and we get: \\
+\begin{center}
+    $\begin{bmatrix}
+        x_e\\
+        y_e\\
+        z_e
+    \end{bmatrix} 
+    = 
+    \begin{bmatrix}
+        3(S_1C_2S_4 + C_1S_3C_4 + S_1S_2C_3C_4) + 3.5(C_1S_3 + S_1S_2C_3)\\
+        3(S_1S_3C_4 - C_1C_2S_4 - C_1C_2C_3C_4) + 3.5(S_1S_3 - C_1S_2C_3)\\
+        3(C_2C_3C_4 - S_2S_4) + 3.5C_2C_3 + 2.5
+    \end{bmatrix}
+    $
+\end{center}
+
+Where S is short for sin(), C for cos(), and the index represents joint the angle of rotation $\theta_i$ of joint $i$ (So for example $S_1 = sin(\theta_1))$. So we can say that the FK is given such that: \\ 
+\begin{center}
+    $\begin{bmatrix}
+        x_e\\
+        y_e\\
+        z_e
+    \end{bmatrix}$ 
+    = K(q), where q = 
+    $\begin{bmatrix}
+        \theta_1 \\
+        \theta_2 \\
+        \theta_3 \\
+        \theta_4
+    \end{bmatrix}
+    $
+\end{center}
+
+Figure 3 compares the estimated end effector position from the images and the estimated end effector position from the FK. The inaccuracies can be due to the fact that we have used a lot of trigonometric functions in the FK matrix, which combined all together lead to differences in the computed results, since floating point numbers are never 100\% accurate. Another issue that could lead to inaccuracies is the joint angles which are estimated, and then fed to the FK matrix, so their accuracy might not always be the on point, then leading to differences between both end effector estimations. Finally, the inaccuracies can also come from the method used to estimate the end effector position via the images, since we are triangulating a 3D position from two 2D images. \\
+
+\textbf{\textit{Insert Figure.3}}
+
+\subsection{Closed\_loop Control}
+
 
 
 \end{document}
