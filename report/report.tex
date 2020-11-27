@@ -79,11 +79,26 @@ Where S is short for sin(), C for cos(), and the index represents joint the angl
     $
 \end{center}
 
-Figure 3 compares the estimated end effector position from the images and the estimated end effector position from the FK. The inaccuracies can be due to the fact that we have used a lot of trigonometric functions in the FK matrix, which combined all together lead to differences in the computed results,
-since floating point numbers are never 100\% accurate. Another issue that could lead to inaccuracies is the joint angles which are estimated, and then fed to the FK matrix, so their accuracy might not always be the on point,
+The table below compares the estimated end effector position from the images and the estimated end effector position from the FK. The inaccuracies can be due to the fact that we have used a lot of trigonometric functions in the FK matrix, which combined all together lead to differences in the computed results,
+since floating point numbers are never 100\% accurate.
 then leading to differences between both end effector estimations. Finally, the inaccuracies can also come from the method used to estimate the end effector position via the images, since we are triangulating a 3D position from two 2D images. \\
 
-\textbf{\textit{Insert Figure.3}}
+\begin{center}
+\begin{tabular}{c|c|c}
+     Angles (rad) & FK estimated position & Vision estimated position \\ \hline
+     (1,1,1,1) & (5.44, 1.77, 1.87) & (5.12, 1.79, 2.01) \\
+     (1,1,1,0.5) & (5.79, 2.65, 3.08) & (5.72, 2.63, 3.16) \\
+     (1,1,0.5,1) & (5.66, -0.48, 2.80) & (5.60, -0.31, 2.69) \\ 
+     (1,0.5,1,1) & (5.31, 1.52, 3.72) & (5.22, 1.59, 3.78) \\ 
+     (0.5,1,1,1) & (5.55, -0.94, 1.87) & (5.47, -0.87, 1.95) \\
+     (0.5,0.5,1,1) & (5.48, -1.35, 3.72) & (5.47, -1.28, 3.66) \\
+     (0.5,1,0.5,1) & (4.62, -2.96, 2.80) & (4.69, -3.07, 2.70) \\ 
+     (0.5,1,1,0.5) & (6.24, -0.28, 3.08) & (6.18, -0.34, 3.12) \\
+     (1,0.5,0.5,1) & (5.00, -0.60, 5.23) & (4.89, -0.71, 5.12) \\
+     (1,1,0.5,0.5) & (6.05, -0.02, 4.20) & (6.12, 0.07, 4.20) \\
+\end{tabular} \\
+\end{center}
+
 
 \subsection{Closed\_loop Control}
 This task designs a closed\_loop controller for the robot. The program calculates the robot's Jacobian $J$ by deriving $(x_e, y_e, z_e)$ with respect to $(\theta_1, \theta_2, \theta_3, \theta_4)$. So $J$ has dimensions $3\times4$, and $J =$
@@ -115,8 +130,8 @@ This task designs a closed\_loop controller for the robot. The program calculate
         -3(S_2C_4 + C_2C_3S_4)\\
       \end{matrix}\right]
 \end{multline}
-With the Jacobian computed, the program tries to follow the target using an adaptation of the closed loop control method used in Lab3 earlier in the semester. The plots in Figure 4 help us see the difference between the computed position the robot tries to follow, and the true position of the target. 
+With the Jacobian computed, the program tries to follow the target using an adaptation of the closed loop control method used in Lab3 earlier in the semester. The plots in Figure 3 help us see the difference between the computed position the robot tries to follow, and the true position of the target. 
 
-\textbf{\textit{Insert Figure.4}}
+\textbf{\textit{Insert Figure.3}}
 
 \end{document}
