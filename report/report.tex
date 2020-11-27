@@ -3,6 +3,7 @@
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage{mathtools}
 \setlength{\parindent}{0pt}
 \begin{document}
 
@@ -78,12 +79,44 @@ Where S is short for sin(), C for cos(), and the index represents joint the angl
     $
 \end{center}
 
-Figure 3 compares the estimated end effector position from the images and the estimated end effector position from the FK. The inaccuracies can be due to the fact that we have used a lot of trigonometric functions in the FK matrix, which combined all together lead to differences in the computed results, since floating point numbers are never 100\% accurate. Another issue that could lead to inaccuracies is the joint angles which are estimated, and then fed to the FK matrix, so their accuracy might not always be the on point, then leading to differences between both end effector estimations. Finally, the inaccuracies can also come from the method used to estimate the end effector position via the images, since we are triangulating a 3D position from two 2D images. \\
+Figure 3 compares the estimated end effector position from the images and the estimated end effector position from the FK. The inaccuracies can be due to the fact that we have used a lot of trigonometric functions in the FK matrix, which combined all together lead to differences in the computed results,
+since floating point numbers are never 100\% accurate. Another issue that could lead to inaccuracies is the joint angles which are estimated, and then fed to the FK matrix, so their accuracy might not always be the on point,
+then leading to differences between both end effector estimations. Finally, the inaccuracies can also come from the method used to estimate the end effector position via the images, since we are triangulating a 3D position from two 2D images. \\
 
 \textbf{\textit{Insert Figure.3}}
 
 \subsection{Closed\_loop Control}
+This task designs a closed\_loop controller for the robot. The program calculates the robot's Jacobian $J$ by deriving $(x_e, y_e, z_e)$ with respect to $(\theta_1, \theta_2, \theta_3, \theta_4)$. So $J$ has dimensions $3\times4$, and $J =$
 
+\begin{multline}
+ \left[
+      \begin{matrix}
+        3(C_1C_2S_4 - S_1S_3C_4 + C_1S_2C_3C_4) + 3.5(C_1S_2C_3 - S_1S_3)\\ 
+        3(S_1C_2S_4 + C_1S_3C_4 + S_1C_2C_3C_4) + 3.5(C_1S_3 + S_1S_2C_3)\\ 
+        0\\
+      \end{matrix}\right.                
+    \\
+    \begin{matrix}
+        3(S_1C_2C_3C_4 - S_1S_2S_4) + 3.5(S_1C_2C_3)\\ 
+        3(C_1S_2S_4 + C_1S_2C_3C_4) - 3.5C_1C_2C_3\\ 
+        -3(C_2S_4 + S_2C_3C_4) -3.5S_2C_3\\
+      \end{matrix}
+      \\
+      \begin{matrix}
+        3(C_1C_3C_4 - S_1S_2S_3C_4) + 3.5(C_1C_3 - S_1S_2S_3)\\ 
+        3(S_1C_3C_4 + C_1C_2S_3C_4) + 3.5(S_1C_3 + C_1S_2C_3)\\ 
+        -3C_2S_3C_4 -3.5C_2S_3\\
+      \end{matrix}
+      \\
+      \left.
+      \begin{matrix}
+        3(S_1C_2C_4 - C_1S_3S_4 - S_1S_2C_3S_4)\\ 
+        3(C_1C_2C_3S_4 - C_1C_2C_4 - S_1S_3S_4)\\ 
+        -3(S_2C_4 + C_2C_3S_4)\\
+      \end{matrix}\right]
+\end{multline}
+With the Jacobian computed, the program tries to follow the target using an adaptation of the closed loop control method used in Lab3 earlier in the semester. The plots in Figure 4 help us see the difference between the computed position the robot tries to follow, and the true position of the target. 
 
+\textbf{\textit{Insert Figure.4}}
 
 \end{document}
