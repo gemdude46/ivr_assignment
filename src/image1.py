@@ -219,6 +219,7 @@ class SceneData:
 	
 	def __str__(self):
 		return '\n'.join([str(self.x_view), str(self.y_view), *(str(o) for o in self.detected_objects.values())])
+		 
 
 class ImageConverter:
 
@@ -248,12 +249,79 @@ class ImageConverter:
 		self.end_pub_z = rospy.Publisher('/vision_estimates/end/z', Float64, queue_size=10)
 
 		self.cv_image1 = self.cv_image2 = None
+		
+		#initialise errors
+		self.error = np.array([0.0, 0.0, 0.0], dtype = 'float64')
+		self.error_d = np.array([0.0, 0.0, 0.0], dtype = 'float64')
+		self.time_previous_step = np.array([rospy.get_time()], dtype = 'float64')
+		
+		self.joint_1_pub = rospy.Publisher('/robot/joint1_position_controller/command', Float64, queue_size=10)
+		self.joint_2_pub = rospy.Publisher('/robot/joint2_position_controller/command', Float64, queue_size=10)
+		self.joint_3_pub = rospy.Publisher('/robot/joint3_position_controller/command', Float64, queue_size=10)
+		self.joint_4_pub = rospy.Publisher('/robot/joint4_position_controller/command', Float64, queue_size=10)
 
-
+	
+	def forward_kinematics(self, joints):
+		c1 = np.cos(joints[0])
+		c2 = np.cos(joints[1])
+		c3 = np.cos(joints[2])
+		c4 = np.cos(joints[3])
+		s1 = np.sin(joints[0])
+		s2 = np.sin(joints[1])
+		s3 = np.sin(joints[2])
+		s4 = np.sin(joints[3])
+		end_effector = np.array([3 * (s1*c2*s4 + c1*s3*c4 + s1*s2*c3*c4) + 3.5 * (c1*s3 + s1*s2*c3),
+					  3 * (-c1*c2*s4 + s1*s3*c4 - c1*c2*c3*c4) + 3.5 * (s1*s3 - c1*s2*c3),
+					  3 * (-s2*s4 + c2*c3*c4) + 3.5 * c2 * c3 + 2.5])
+		return end_effector
+		
+	def jacobian(self, joints):
+		c1 = np.cos(joints[0])
+		c2 = np.cos(joints[1])
+		c3 = np.cos(joints[2])
+		c4 = np.cos(joints[3])
+		s1 = np.sin(joints[0])
+		s2 = np.sin(joints[1])
+		s3 = np.sin(joints[2])
+		s4 = np.sin(joints[3])
+		jacobian = np.array([[3 * (c1*c2*s4 - s1*s3*c4 + c1*s2*c3*c4) + 3.5 * (-s1*s3 + c1*s2*c3),
+					3 * (-s1*s2*s4 + s1*c2*c3*c4) + 3.5 * s1*c2*c3,
+					3 * (c1*c3*c4 - s1*s2*s3*c4) + 3.5 * (c1*c3 - s1*s2*s3),
+					3 * (s1*c2*c4 - c1*s3*s4 - s1*s2*c3*s4)],
+				    [3 * (s1*c2*s4 + c1*s3*c4 + s1*c2*c3*c4) + 3.5 * (c1*s3 + s1*s2*c3),
+				    	3 * (c1*s2*s4 + c1*s2*c3*c4) - 3.5 * c1*c2*c3,
+				    	3 * (s1*c3*c4 + c1*c2*s3*c4) + 3.5 * (s1*c3 + c1*s2*c3),
+				    	3 * (-c1*c2*c4 - s1*s3*s4 + c1*c2*c3*s4)],
+				    [0,
+				    	3 * (-c2*s4 - s2*c3*c4) - 3.5 *s2*c3,
+				    	-3 * c2*s3*c4 - 3.5 * c2*s3,
+				    	3 * (-s2*c4 - c2*c3*s4) ]])
+		return jacobian
+		
+	def control_closed(self, joints, end_effector, target):
+		#P_gain
+		K_p = np.array([[20,0,0], [0,20,0], [0,0,20]])
+		#D_gain
+		K_d = np.array([[0.1,0,0], [0,0.1,0], [0,0,0.1]])
+		
+		cur_time = np.array([rospy.get_time()])
+		dt = cur_time - self.time_previous_step
+		self.time_previous_step = cur_time
+		
+		#estimate derivative of error
+		self.error_d = ((target - end_effector) - self.error) / dt
+		#estimate error
+		self.error = target - end_effector
+		
+		J_inv = np.linalg.pinv(self.jacobian(joints))
+		dq_d = np.dot(J_inv, ( np.dot(K_d, self.error_d.transpose()) + np.dot(K_p, self.error.transpose())))
+		q_d = joints + (dt * dq_d)
+		return q_d
+		
 
 	# Recieve data from camera 1, process it, and publish
 	def callback1(self,data):
-		# Recieve the image
+		# Receive the image
 		try:
 			self.cv_image1 = self.bridge.imgmsg_to_cv2(data, "bgr8")
 		except CvBridgeError as e:
@@ -262,7 +330,7 @@ class ImageConverter:
 		# Uncomment if you want to save the image
 		#cv2.imwrite('image_copy.png', cv_image)
 
-		#im1=cv2.imshow('window1', self.cv_image1)
+		im1=cv2.imshow('window1', self.cv_image1)
 		cv2.waitKey(1)
 		# Publish the results
 		try: 
@@ -291,6 +359,7 @@ class ImageConverter:
 			self.est_2_pub.publish(est_joint_2)
 			self.est_3_pub.publish(est_joint_3)
 			self.est_4_pub.publish(est_joint_4)
+			
 
 			end_offset = red - yellow
 
@@ -303,6 +372,16 @@ class ImageConverter:
 			self.target_pub_x.publish(target_offset[0])
 			self.target_pub_y.publish(target_offset[1])
 			self.target_pub_z.publish(0.6 - target_offset[2])
+			
+			joints = np.array([0.0, est_joint_2, est_joint_3, est_joint_4])
+			end_effector = np.array([end_offset[0], end_offset[1], 0.6 - end_offset[2]])
+			target_est = np.array([target_offset[0], target_offset[1], 0.6 - target_offset[2]])
+			
+			q_d = self.control_closed(joints, end_effector, target_est)
+			self.joint_1_pub.publish(q_d[0])
+			self.joint_2_pub.publish(q_d[1])
+			self.joint_3_pub.publish(q_d[2])
+			self.joint_4_pub.publish(q_d[3])
 
 	
 	def callback2(self, data):

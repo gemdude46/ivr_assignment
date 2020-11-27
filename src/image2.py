@@ -41,14 +41,14 @@ class image_converter:
 			print(e)
 		# Uncomment if you want to save the image
 		#cv2.imwrite('image_copy.png', cv_image)
-		#im2=cv2.imshow('window2', self.cv_image2)
-		#cv2.waitKey(1)
+		im2=cv2.imshow('window2', self.cv_image2)
+		cv2.waitKey(1)
 
 		#move joints
 		t = rospy.get_time()
-		self.joint_2_pub.publish(math.pi / 2 * math.sin(math.pi / 15 * t))
-		self.joint_3_pub.publish(math.pi / 2 * math.sin(math.pi / 18 * t))
-		self.joint_4_pub.publish(math.pi / 2 * math.sin(math.pi / 20 * t))
+		#self.joint_2_pub.publish(math.pi / 2 * math.sin(math.pi / 15 * t))
+		#self.joint_3_pub.publish(math.pi / 2 * math.sin(math.pi / 18 * t))
+		#self.joint_4_pub.publish(math.pi / 2 * math.sin(math.pi / 20 * t))
 
 		# Publish the results
 		try: 
