@@ -247,8 +247,14 @@ class ImageConverter:
 		self.end_pub_x = rospy.Publisher('/vision_estimates/end/x', Float64, queue_size=10)
 		self.end_pub_y = rospy.Publisher('/vision_estimates/end/y', Float64, queue_size=10)
 		self.end_pub_z = rospy.Publisher('/vision_estimates/end/z', Float64, queue_size=10)
+		# actual joint values (for fk)
+		self.joint_sub1 = rospy.Subscriber("/robot/joint1_position_controller/command",Float64,self.jointcallback1)
+		self.joint_sub2 = rospy.Subscriber("/robot/joint2_position_controller/command",Float64,self.jointcallback2)
+		self.joint_sub3 = rospy.Subscriber("/robot/joint3_position_controller/command",Float64,self.jointcallback3)
+		self.joint_sub4 = rospy.Subscriber("/robot/joint4_position_controller/command",Float64,self.jointcallback4)
 
 		self.cv_image1 = self.cv_image2 = None
+		self.actual_joints = [0,0,0,0]
 		
 		#initialise errors
 		self.error = np.array([0.0, 0.0, 0.0], dtype = 'float64')
@@ -300,9 +306,9 @@ class ImageConverter:
 		
 	def control_closed(self, joints, end_effector, target):
 		#P_gain
-		K_p = np.array([[20,0,0], [0,20,0], [0,0,20]])
+		K_p = np.array([[.5,0,0], [0,.5,0], [0,0,.5]])
 		#D_gain
-		K_d = np.array([[0.1,0,0], [0,0.1,0], [0,0,0.1]])
+		K_d = np.array([[0.2,0,0], [0,0.2,0], [0,0,0.2]])
 		
 		cur_time = np.array([rospy.get_time()])
 		dt = cur_time - self.time_previous_step
@@ -317,7 +323,15 @@ class ImageConverter:
 		dq_d = np.dot(J_inv, ( np.dot(K_d, self.error_d.transpose()) + np.dot(K_p, self.error.transpose())))
 		q_d = joints + (dt * dq_d)
 		return q_d
-		
+	
+	def jointcallback1(self, data):
+		self.actual_joints[0] = data.data
+	def jointcallback2(self, data):
+		self.actual_joints[1] = data.data
+	def jointcallback3(self, data):
+		self.actual_joints[2] = data.data
+	def jointcallback4(self, data):
+		self.actual_joints[3] = data.data
 
 	# Recieve data from camera 1, process it, and publish
 	def callback1(self,data):
@@ -373,7 +387,7 @@ class ImageConverter:
 			self.target_pub_y.publish(target_offset[1])
 			self.target_pub_z.publish(0.6 - target_offset[2])
 			
-			joints = np.array([0.0, est_joint_2, est_joint_3, est_joint_4])
+			joints = np.array(self.actual_joints)
 			end_effector = np.array([end_offset[0], end_offset[1], 0.6 - end_offset[2]])
 			target_est = np.array([target_offset[0], target_offset[1], 0.6 - target_offset[2]])
 			
